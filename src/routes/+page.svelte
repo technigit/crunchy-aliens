@@ -3,6 +3,6 @@
 </script>
 
 <main>
-   <h1>Crunchy Invaders</h1>
+   <h1>Crunchy Aliens</h1>
    <Game />
 </main>
