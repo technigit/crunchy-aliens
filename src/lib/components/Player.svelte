@@ -2,6 +2,7 @@
   import { game_store } from '../../shared/game_store.js';
   import { player_store } from '../../shared/store.js';
   import { onDestroy } from 'svelte';
+  import * as Bullet from './Bullet.svelte';
 
   let game_bounds;
   let player;
@@ -57,6 +58,14 @@
 
   export const go_right = () => {
     player_moving = game_store.RIGHT;
+  }
+
+  //================================================================================
+  // start a bullet fired by the player
+  //================================================================================
+
+  export const shoot = () => {
+    Bullet.fire();
   }
 </script>
 

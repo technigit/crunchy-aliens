@@ -1,14 +1,15 @@
 <script>
-  import { player_store } from '../../shared/store.js';
+  import { player_store, bullet_store } from '../../shared/store.js';
   import { game_store } from '../../shared/game_store.js';
   import { onDestroy, onMount } from 'svelte';
   import * as Player from './Player.svelte';
+  import * as Bullet from './Bullet.svelte';
   import Enemy from './Enemy.svelte';
-  import Bullet from './Bullet.svelte';
 
   let canvas;
   let game_bounds;
   let player;
+  let bullet_;
 
   const game_store_unsubscribe = game_store.bounds.subscribe(value => {
     game_bounds = value;
@@ -18,17 +19,15 @@
     player = value;
   });
 
+  const bullet_store_unsubscribe = bullet_store.subscribe(value => {
+    bullet_ = value;
+  });
+
   // gameplay attributes
   let score = 0;
   let playing;
   let pausing;
   let game_interval; // for game loop timer
-
-  // bullets
-  let bullets = [];
-  let bullet_delta = 10;
-  let bullet_width = 5;
-  let bullet_height = 20;
 
   // enemies
   let enemies = [];
@@ -44,6 +43,7 @@
   onDestroy(() => {
     game_store_unsubscribe();
     player_store_unsubscribe();
+    bullet_store_unsubscribe();
   });
 
   //================================================================================
@@ -72,19 +72,7 @@
     Player.move();
 
     // move bullets
-    bullets = bullets.filter(bullet => bullet.y > game_bounds.top_bound + game_bounds.vmargin && !bullet.cleared);
-    bullets.forEach(bullet => bullet.y -= bullet_delta);
-
-    // check for collisions
-    bullets.forEach(bullet => {
-      enemies.forEach(enemy => {
-        if (bullet.x < enemy.x + enemy_width && bullet.x + bullet_width > enemy.x && bullet.y < enemy.y + enemy_width && bullet.y + bullet_height > enemy.y) {
-          enemy.alive = false;
-          score += 10;
-          bullet.cleared = true;
-        }
-      });
-    });
+    Bullet.move();
 
     // move enemies
     let leftmost = game_bounds.right_bound - game_bounds.vmargin;
@@ -132,14 +120,6 @@
   };
 
   //================================================================================
-  // start a bullet fired by the player
-  //================================================================================
-
-  const shoot = () => {
-    bullets.push({ x: player.x + player.gunpoint, y: player.y, cleared: false });
-  };
-
-  //================================================================================
   // process keypresses
   //================================================================================
 
@@ -149,7 +129,7 @@
     } else if (event.key === 'ArrowRight') {
       Player.go_right();
     } else if (event.key === ' ') {
-      shoot();
+      Player.shoot();
     } else if (event.key === 'k') {
       if (!playing && !pausing) {
         start();
@@ -165,7 +145,7 @@
       playing = false;
       pausing = false;
       enemies = [];
-      bullets = [];
+      Bullet.clear();
       clearInterval(game_interval);
     }
   };
@@ -200,10 +180,7 @@
     Player.draw(ctx);
 
     // draw bullets
-    bullets.forEach(bullet => {
-      ctx.fillStyle = 'yellow';
-      ctx.fillRect(bullet.x, bullet.y, bullet_width, bullet_height);
-    });
+    Bullet.draw(ctx);
 
     // draw enemies
     enemies.forEach(enemy => {
