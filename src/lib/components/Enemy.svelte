@@ -1,9 +1,140 @@
-<script>
-  export let x;
-  export let y;
+<script module>
+  import { game_store } from '../../shared/game_store.js';
+  import { player_store, enemy_store, bullet_store } from '../../shared/store.js';
+  import { onDestroy } from 'svelte';
 
-  const draw = (ctx) => {
-    ctx.fillStyle = 'red';
-    ctx.fillRect(x, y, 50, 50); // Simple rectangle for the enemy
+  let game_bounds;
+  let player;
+  let bullet_;
+  let enemy_;
+  let enemy_moving = game_store.RIGHT;
+
+  const game_store_unsubscribe = game_store.bounds.subscribe(value => {
+    game_bounds = value;
+  });
+
+  const player_store_unsubscribe = player_store.subscribe(value => {
+    player = value;
+  });
+
+  const enemy_store_unsubscribe = enemy_store.subscribe(value => {
+    enemy_ = value;
+  });
+
+  const bullet_store_unsubscribe = bullet_store.subscribe(value => {
+    bullet_ = value;
+  });
+
+  //================================================================================
+  // update the enemy store
+  //================================================================================
+
+  function updateEnemies(value) {
+    enemy_store.update(current => ({
+      ...current,
+      enemies: value
+    }));
+  }
+
+  //================================================================================
+  // initialize the enemy formation
+  //================================================================================
+
+  export const create = (ctx) => {
+    let c = 0;
+    let r = 0;
+    for (let i = 0; i < enemy_.num_enemies; i++) {
+      enemy_.enemies.push({
+        x: game_bounds.left_bound + game_bounds.vmargin + c * enemy_.column_width,
+        y: r * enemy_.row_height + game_bounds.top_bound + game_bounds.hmargin,
+        alive: true
+      });
+      c++;
+      if (c > enemy_.max_columns) {
+        c = 0;
+        r++;
+      }
+    }
+    updateEnemies(enemy_.enemies);
   };
+
+  //================================================================================
+  // draw enemies
+  //================================================================================
+
+  export const draw = (ctx) => {
+    enemy_.enemies.forEach(enemy => {
+      if (enemy.alive) {
+        ctx.fillStyle = 'red';
+        ctx.fillRect(enemy.x, enemy.y, enemy_.width, enemy_.height);
+      }
+    });
+  };
+
+  //================================================================================
+  // move enemies
+  //================================================================================
+
+  export const move = () => {
+    let leftmost = game_bounds.right_bound - game_bounds.vmargin;
+    let rightmost = game_bounds.left_bound + game_bounds.vmargin;
+    enemy_.enemies.forEach(enemy => {
+      if (enemy.x < leftmost) {
+        leftmost = enemy.x;
+      }
+      if (enemy.x > rightmost) {
+        rightmost = enemy.x;
+      }
+    });
+    let offset = 0;
+    let rightmost_edge = rightmost + enemy_.width;
+    let left_breach = leftmost - enemy_.delta;
+    let right_breach = rightmost_edge + enemy_.delta;
+    if (enemy_moving == game_store.LEFT) {
+      if (left_breach < game_bounds.left_bound + game_bounds.vmargin) {
+        let limit = leftmost - game_bounds.left_bound - game_bounds.vmargin;
+        offset = limit - enemy_.delta;
+      }
+    }
+    if (enemy_moving == game_store.RIGHT) {
+      if (right_breach > game_bounds.right_bound - game_bounds.vmargin) {
+        let limit = game_bounds.right_bound - game_bounds.vmargin - rightmost_edge;
+        offset = limit - enemy_.delta;
+      }
+    }
+    enemy_.enemies.forEach(enemy => {
+      if (enemy_moving == game_store.LEFT) {
+        enemy.x -= enemy_.delta + offset;
+      }
+      if (enemy_moving == game_store.RIGHT) {
+        enemy.x += enemy_.delta + offset;
+      }
+    })
+    if (enemy_moving == game_store.LEFT && left_breach <= game_bounds.left_bound + game_bounds.vmargin) {
+      enemy_moving = game_store.RIGHT;
+    } else if (enemy_moving == game_store.RIGHT && right_breach >= game_bounds.right_bound - game_bounds.vmargin) {
+      enemy_moving = game_store.LEFT;
+    }
+
+    // remove eliminated enemies
+    enemy_.enemies = enemy_.enemies.filter(enemy => enemy.alive);
+    updateEnemies(enemy_.enemies);
+  }
+
+  //================================================================================
+  // clear enemies
+  //================================================================================
+
+  export const clear = () => {
+    updateEnemies([]);
+  }
+</script>
+
+<script>
+  onDestroy(() => {
+    game_store_unsubscribe();
+    player_store_unsubscribe();
+    bullet_store_unsubscribe();
+    enemy_store_unsubscribe();
+  });
 </script>

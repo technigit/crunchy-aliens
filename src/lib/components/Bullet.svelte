@@ -1,13 +1,13 @@
 <script module>
   import { game_store } from '../../shared/game_store.js';
-  import { player_store, bullet_store } from '../../shared/store.js';
+  import { player_store, bullet_store, enemy_store } from '../../shared/store.js';
   import { onDestroy } from 'svelte';
 
   let game_bounds;
   let player;
   let bullet_;
   let bullets = [];
-  let enemies = [];
+  let enemy_;
 
   const game_store_unsubscribe = game_store.bounds.subscribe(value => {
     game_bounds = value;
@@ -21,17 +21,32 @@
     bullet_ = value;
   });
 
+  const enemy_store_unsubscribe = enemy_store.subscribe(value => {
+    enemy_ = value;
+  });
+
+  //================================================================================
+  // start a bullet fired by the player
+  //================================================================================
+
   export const fire = () => {
     bullets.push({ x: player.x + player.gunpoint, y: player.y, cleared: false });
   }
 
+  //================================================================================
+  // draw bullets
+  //================================================================================
+
   export const draw = (ctx) => {
-    // move bullets
     bullets.forEach(bullet => {
       ctx.fillStyle = 'yellow';
       ctx.fillRect(bullet.x, bullet.y, bullet_.width, bullet_.height);
     });
   };
+
+  //================================================================================
+  // bullet movement
+  //================================================================================
 
   export const move = () => {
     // move bullets
@@ -39,16 +54,21 @@
     bullets.forEach(bullet => bullet.y -= bullet_.delta);
 
     // check for collisions
+    let enemies_ = enemy_.enemies;
     bullets.forEach(bullet => {
-      enemies.forEach(enemy => {
-        if (bullet.x < enemy.x + enemy_width && bullet.x + bullet_.width > enemy.x && bullet.y < enemy.y + enemy_width && bullet.y + bullet_.height > enemy.y) {
+      enemies_.forEach(enemy => {
+        if (bullet.x < enemy.x + enemy_.width && bullet.x + bullet_.width > enemy.x && bullet.y < enemy.y + enemy_.width && bullet.y + bullet_.height > enemy.y) {
           enemy.alive = false;
-          score += 10;
+          //score += 10; // scorekeeping will be refactored
           bullet.cleared = true;
         }
       });
     });
   }
+
+  //================================================================================
+  // reset bullets to none
+  //================================================================================
 
   export const clear = () => {
     bullets = [];

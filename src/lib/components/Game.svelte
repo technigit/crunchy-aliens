@@ -4,7 +4,7 @@
   import { onDestroy, onMount } from 'svelte';
   import * as Player from './Player.svelte';
   import * as Bullet from './Bullet.svelte';
-  import Enemy from './Enemy.svelte';
+  import * as Enemy from './Enemy.svelte';
 
   let canvas;
   let game_bounds;
@@ -44,79 +44,17 @@
     game_store_unsubscribe();
     player_store_unsubscribe();
     bullet_store_unsubscribe();
+    reset();
   });
-
-  //================================================================================
-  // initialize the enemy formation
-  //================================================================================
-
-  const createEnemies = () => {
-    let c = 0;
-    let r = 0;
-    for (let i = 0; i < num_enemies; i++) {
-      enemies.push({ x: game_bounds.left_bound + game_bounds.vmargin + c * enemy_column_width, y: r * enemy_row_height + game_bounds.top_bound + game_bounds.hmargin, alive: true });
-      c++;
-      if (c > max_enemy_columns) {
-        c = 0;
-        r++;
-      }
-    }
-  };
 
   //================================================================================
   // update the game area for the next frame
   //================================================================================
 
   const update = () => {
-    // move player
     Player.move();
-
-    // move bullets
     Bullet.move();
-
-    // move enemies
-    let leftmost = game_bounds.right_bound - game_bounds.vmargin;
-    let rightmost = game_bounds.left_bound + game_bounds.vmargin;
-    enemies.forEach(enemy => {
-      if (enemy.x < leftmost) {
-        leftmost = enemy.x;
-      }
-      if (enemy.x > rightmost) {
-        rightmost = enemy.x;
-      }
-    });
-    let offset = 0;
-    let rightmost_edge = rightmost + enemy_width;
-    let left_breach = leftmost - enemy_delta;
-    let right_breach = rightmost_edge + enemy_delta;
-    if (enemy_moving == game_store.LEFT) {
-      if (left_breach < game_bounds.left_bound + game_bounds.vmargin) {
-        let limit = leftmost - game_bounds.left_bound - game_bounds.vmargin;
-        offset = limit - enemy_delta;
-      }
-    }
-    if (enemy_moving == game_store.RIGHT) {
-      if (right_breach > game_bounds.right_bound - game_bounds.vmargin) {
-        let limit = game_bounds.right_bound - game_bounds.vmargin - rightmost_edge;
-        offset = limit - enemy_delta;
-      }
-    }
-    enemies.forEach(enemy => {
-      if (enemy_moving == game_store.LEFT) {
-        enemy.x -= enemy_delta + offset;
-      }
-      if (enemy_moving == game_store.RIGHT) {
-        enemy.x += enemy_delta + offset;
-      }
-    })
-    if (enemy_moving == game_store.LEFT && left_breach <= game_bounds.left_bound + game_bounds.vmargin) {
-      enemy_moving = game_store.RIGHT;
-    } else if (enemy_moving == game_store.RIGHT && right_breach >= game_bounds.right_bound - game_bounds.vmargin) {
-      enemy_moving = game_store.LEFT;
-    }
-
-    // remove eliminated enemies
-    enemies = enemies.filter(enemy => enemy.alive);
+    Enemy.move();
   };
 
   //================================================================================
@@ -141,11 +79,8 @@
         play();
       }
     } else if (event.key === 'q') {
-      score = 0;
-      playing = false;
-      pausing = false;
-      enemies = [];
-      Bullet.clear();
+      reset();
+    } else if (event.key === 'Z') {
       clearInterval(game_interval);
     }
   };
@@ -183,12 +118,7 @@
     Bullet.draw(ctx);
 
     // draw enemies
-    enemies.forEach(enemy => {
-      if (enemy.alive) {
-        ctx.fillStyle = 'red';
-        ctx.fillRect(enemy.x, enemy.y, enemy_width, enemy_height);
-      }
-    });
+    Enemy.draw(ctx);
 
     // draw score
     ctx.fillStyle = 'white';
@@ -202,6 +132,7 @@
   // play()
   // start()
   // pause()
+  // reset()
   //================================================================================
 
   const play = () => {
@@ -218,7 +149,7 @@
 
   function start() {
     Player.init();
-    createEnemies();
+    Enemy.create();
     play();
   }
 
@@ -226,6 +157,15 @@
     playing = false;
     pausing = true;
     clearInterval(game_interval)
+  }
+
+  function reset() {
+    score = 0;
+    playing = false;
+    pausing = false;
+    Enemy.clear();
+    Bullet.clear();
+    clearInterval(game_interval);
   }
 
   // initialize game ui

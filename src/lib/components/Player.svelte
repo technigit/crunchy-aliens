@@ -17,6 +17,10 @@
 
   let player_moving = game_store.STOP;
 
+  //================================================================================
+  // initialize player
+  //================================================================================
+
   export const init = () => {
     if (game_bounds) {
       let player_y = player.height + game_bounds.hmargin + game_bounds.bottom_bound; // relative to canvas bottom
@@ -28,12 +32,20 @@
     }
   };
 
+  //================================================================================
+  // draw player
+  //================================================================================
+
   export const draw = (ctx) => {
     if (player) {
       ctx.fillStyle = 'white';
       ctx.fillRect(player.x, player.y, player.width, player.height);
     }
   }
+
+  //================================================================================
+  // player movement
+  //================================================================================
 
   export const move = (cts) => {
     if (player) {
@@ -51,6 +63,10 @@
       player_store.set(player);
     }
   }
+
+  //================================================================================
+  // player control movement
+  //================================================================================
 
   export const go_left = () => {
     player_moving = game_store.LEFT;
