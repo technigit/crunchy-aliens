@@ -1,6 +1,24 @@
 import { writable } from 'svelte/store';
 
 //================================================================================
+// heads up display
+//================================================================================
+
+const INITIAL_SCORE = 0;
+const INITIAL_HIGH_SCORE = 0;
+const INITIAL_LIVES = 3;
+const INITIAL_WINS = 0;
+const INITIAL_PLAYER_UP = 1;
+
+export const hud_store = writable({
+    score: INITIAL_SCORE,
+    high_score: INITIAL_HIGH_SCORE,
+    lives: INITIAL_LIVES,
+    wins: INITIAL_WINS,
+    player_up: INITIAL_PLAYER_UP,
+});
+
+//================================================================================
 // bullets
 //================================================================================
 

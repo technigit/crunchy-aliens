@@ -24,6 +24,7 @@
   export const init = () => {
     if (game_bounds) {
       let player_y = player.height + game_bounds.hmargin + game_bounds.bottom_bound; // relative to canvas bottom
+      player_moving = game_store.STOP;
       player_store.update(current => ({
         ...current,
         x: (game_bounds.left_bound + game_bounds.right_bound) / 2 - player.width / 2,

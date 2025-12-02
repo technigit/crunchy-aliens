@@ -1,10 +1,10 @@
 <script module>
   import { game_store } from '../../shared/game_store.js';
-  import { player_store, enemy_store, bullet_store } from '../../shared/store.js';
+  import { hud_store, enemy_store } from '../../shared/store.js';
   import { onDestroy } from 'svelte';
 
   let game_bounds;
-  let player;
+  let hud;
   let bullet_;
   let enemy_;
   let enemy_moving = game_store.RIGHT;
@@ -13,16 +13,12 @@
     game_bounds = value;
   });
 
-  const player_store_unsubscribe = player_store.subscribe(value => {
-    player = value;
+  const hud_store_unsubscribe = hud_store.subscribe(value => {
+    hud = value;
   });
 
   const enemy_store_unsubscribe = enemy_store.subscribe(value => {
     enemy_ = value;
-  });
-
-  const bullet_store_unsubscribe = bullet_store.subscribe(value => {
-    bullet_ = value;
   });
 
   //================================================================================
@@ -47,7 +43,8 @@
       enemy_.enemies.push({
         x: game_bounds.left_bound + game_bounds.vmargin + c * enemy_.column_width,
         y: r * enemy_.row_height + game_bounds.top_bound + game_bounds.hmargin,
-        alive: true
+        alive: true,
+        value: 10,
       });
       c++;
       if (c > enemy_.max_columns) {
@@ -55,7 +52,6 @@
         r++;
       }
     }
-    updateEnemies(enemy_.enemies);
   };
 
   //================================================================================
@@ -118,7 +114,15 @@
 
     // remove eliminated enemies
     enemy_.enemies = enemy_.enemies.filter(enemy => enemy.alive);
-    updateEnemies(enemy_.enemies);
+  }
+
+  //================================================================================
+  // eliminate an enemy
+  //================================================================================
+
+  export const eliminate = (enemy) => {
+    enemy.alive = false;
+    hud.score += enemy.value;
   }
 
   //================================================================================
@@ -133,8 +137,7 @@
 <script>
   onDestroy(() => {
     game_store_unsubscribe();
-    player_store_unsubscribe();
-    bullet_store_unsubscribe();
+    hud_store_unsubscribe();
     enemy_store_unsubscribe();
   });
 </script>

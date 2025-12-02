@@ -1,6 +1,7 @@
 <script module>
   import { game_store } from '../../shared/game_store.js';
   import { player_store, bullet_store, enemy_store } from '../../shared/store.js';
+  import * as Enemy from './Enemy.svelte';
   import { onDestroy } from 'svelte';
 
   let game_bounds;
@@ -58,8 +59,7 @@
     bullets.forEach(bullet => {
       enemies_.forEach(enemy => {
         if (bullet.x < enemy.x + enemy_.width && bullet.x + bullet_.width > enemy.x && bullet.y < enemy.y + enemy_.width && bullet.y + bullet_.height > enemy.y) {
-          enemy.alive = false;
-          //score += 10; // scorekeeping will be refactored
+          Enemy.eliminate(enemy);
           bullet.cleared = true;
         }
       });
