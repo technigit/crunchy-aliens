@@ -12,6 +12,15 @@ const LEFT = 0;
 const RIGHT = 1;
 const STOP = -1;
 
+// stop movement after this many frames
+const MOVE_COOLDOWN = 20;
+
+// wait this many frames before firing again
+const FIRE_COOLDOWN = 10; // frames
+
+// limit the number of bullets at any time
+const FIRE_MAX = 10;
+
 // left_bound: distance from canvas left
 // right_bound: distance from canvas left
 // top_bound: distance from canvas top
@@ -37,6 +46,12 @@ export const game_store = {
     LEFT: LEFT,
     RIGHT: RIGHT,
     STOP: STOP,
+
+    MOVE_COOLDOWN: MOVE_COOLDOWN,
+
+    FIRE_COOLDOWN: FIRE_COOLDOWN,
+
+    FIRE_MAX: FIRE_MAX,
 
     bounds: writable({
         left_bound: INITIAL_LEFT_BOUND,

@@ -10,6 +10,8 @@
   let bullets = [];
   let enemy_;
 
+  let fire_cooldown = 0;
+
   const game_store_unsubscribe = game_store.bounds.subscribe(value => {
     game_bounds = value;
   });
@@ -31,7 +33,10 @@
   //================================================================================
 
   export const fire = () => {
-    bullets.push({ x: player.x + player.gunpoint, y: player.y, cleared: false });
+    if (!fire_cooldown && bullets.length < game_store.FIRE_MAX) {
+      bullets.push({ x: player.x + player.gunpoint, y: player.y, cleared: false });
+      fire_cooldown = game_store.FIRE_COOLDOWN;
+    }
   }
 
   //================================================================================
@@ -39,6 +44,9 @@
   //================================================================================
 
   export const draw = (ctx) => {
+    if (fire_cooldown) {
+      fire_cooldown--;
+    }
     bullets.forEach(bullet => {
       ctx.fillStyle = 'yellow';
       ctx.fillRect(bullet.x, bullet.y, bullet_.width, bullet_.height);

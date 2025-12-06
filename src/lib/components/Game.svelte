@@ -13,6 +13,10 @@
   let player;
   let bullet_;
 
+  let left_key_down = false;
+  let right_key_down = false;
+  let fire_key_down = false;
+
   const game_store_unsubscribe = game_store.bounds.subscribe(value => {
     game_bounds = value;
   });
@@ -68,11 +72,11 @@
     // active game playing
     if (started && !pausing) {
       if (event.key === 'ArrowLeft') {
-        Player.go_left();
+        left_key_down = true;
       } else if (event.key === 'ArrowRight') {
-        Player.go_right();
+        right_key_down = true;
       } else if (event.key === ' ') {
-        Player.shoot();
+        fire_key_down = true;
       }
     }
 
@@ -87,6 +91,16 @@
       } else if (event.key === 'q') {
         reset();
       }
+    }
+  };
+
+  const handleKeyUp = (event) => {
+    if (event.key == 'ArrowLeft') {
+      left_key_down = false;
+    } else if (event.key == 'ArrowRight') {
+      right_key_down = false;
+    } else if (event.key === ' ') {
+      fire_key_down = false;
     }
   };
 
@@ -149,6 +163,16 @@
       if (!playing) {
         clearInterval(interval);
       }
+      if (left_key_down && right_key_down) {
+        Player.go_left_right();
+      } else if (left_key_down) {
+        Player.go_left();
+      } else if (right_key_down) {
+        Player.go_right();
+      }
+      if (fire_key_down) {
+        Player.shoot();
+      }
       update();
       draw();
     }, game_store.TIME_INTERVAL);
@@ -182,6 +206,7 @@
   // initialize game ui
   onMount(() => {
     window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
     draw();
     if (game_store.AUTOSTART) {
       start();
