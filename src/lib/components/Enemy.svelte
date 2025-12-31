@@ -1,6 +1,5 @@
 <script module>
-  import { game_store } from '../../shared/game_store.js';
-  import { hud_store, enemy_store } from '../../shared/store.js';
+  import { game_store, hud_store, enemy_store } from '../../shared/store.js';
   import { onDestroy } from 'svelte';
 
   let game_bounds;
@@ -8,6 +7,7 @@
   let bullet_;
   let enemy_;
   let enemy_moving = game_store.RIGHT;
+  let tau_step = 0;
 
   const game_store_unsubscribe = game_store.bounds.subscribe(value => {
     game_bounds = value;
@@ -72,6 +72,12 @@
   //================================================================================
 
   export const move = () => {
+    tau_step++;
+    if (tau_step > enemy_.tau) {
+      tau_step = 0;
+    } else {
+      return;
+    }
     let leftmost = game_bounds.right_bound - game_bounds.vmargin;
     let rightmost = game_bounds.left_bound + game_bounds.vmargin;
     enemy_.enemies.forEach(enemy => {

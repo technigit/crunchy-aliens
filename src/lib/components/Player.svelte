@@ -1,6 +1,5 @@
 <script module>
-  import { game_store } from '../../shared/game_store.js';
-  import { player_store } from '../../shared/store.js';
+  import { game_store, player_store } from '../../shared/store.js';
   import { onDestroy } from 'svelte';
   import * as Bullet from './Bullet.svelte';
 
@@ -8,6 +7,7 @@
   let player;
 
   let move_cooldown = 0;
+  let tau_step = 0;
 
   const game_store_unsubscribe = game_store.bounds.subscribe(value => {
     game_bounds = value;
@@ -41,16 +41,26 @@
 
   export const draw = (ctx) => {
     if (player) {
-      ctx.fillStyle = 'white';
-      ctx.fillRect(player.x, player.y, player.width, player.height);
+      draw_player(ctx);
     }
+  }
+
+  export const draw_player = (ctx, x = player.x, y = player.y, width = player.width, height = player.height) => {
+    ctx.fillStyle = 'white';
+    ctx.fillRect(x, y, width, height);
   }
 
   //================================================================================
   // player movement
   //================================================================================
 
-  export const move = (cts) => {
+  export const move = () => {
+    tau_step++;
+    if (tau_step > player.tau) {
+      tau_step = 0;
+    } else {
+      return;
+    }
     if (move_cooldown) {
       move_cooldown > 0 ? move_cooldown-- : move_cooldown;
     } else {
@@ -79,14 +89,14 @@
   export const go_left = () => {
     if (move_cooldown == 0 || player_moving == game_store.RIGHT) {
       player_moving = game_store.LEFT;
-      move_cooldown = game_store.MOVE_COOLDOWN;
+      move_cooldown = player.move_cooldown;
     }
   }
 
   export const go_right = () => {
     if (move_cooldown == 0 || player_moving == game_store.LEFT) {
       player_moving = game_store.RIGHT;
-      move_cooldown = game_store.MOVE_COOLDOWN;
+      move_cooldown = player.move_cooldown;
     }
   }
 

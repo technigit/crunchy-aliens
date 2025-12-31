@@ -1,6 +1,5 @@
 <script module>
-  import { game_store } from '../../shared/game_store.js';
-  import { player_store, bullet_store, enemy_store } from '../../shared/store.js';
+  import { game_store, player_store, bullet_store, enemy_store } from '../../shared/store.js';
   import * as Enemy from './Enemy.svelte';
   import { onDestroy } from 'svelte';
 
@@ -11,6 +10,7 @@
   let enemy_;
 
   let fire_cooldown = 0;
+  let tau_step = 0;
 
   const game_store_unsubscribe = game_store.bounds.subscribe(value => {
     game_bounds = value;
@@ -33,9 +33,9 @@
   //================================================================================
 
   export const fire = () => {
-    if (!fire_cooldown && bullets.length < game_store.FIRE_MAX) {
-      bullets.push({ x: player.x + player.gunpoint, y: player.y, cleared: false });
-      fire_cooldown = game_store.FIRE_COOLDOWN;
+    if (!fire_cooldown && bullets.length < bullet_.fire_max) {
+      bullets.push({ x: player.x + player.gunpoint_x, y: player.y - player.gunpoint_y + player.gunheight, cleared: false });
+      fire_cooldown = bullet_.fire_cooldown;
     }
   }
 
@@ -44,12 +44,21 @@
   //================================================================================
 
   export const draw = (ctx) => {
-    if (fire_cooldown) {
-      fire_cooldown--;
-    }
+    let by, bh;
+    let gp = player.y - player.gunpoint_y;
     bullets.forEach(bullet => {
-      ctx.fillStyle = 'yellow';
-      ctx.fillRect(bullet.x, bullet.y, bullet_.width, bullet_.height);
+      by = bullet.y - bullet_.height;
+      bh = bullet_.height;
+      if (by < game_bounds.top_bound + game_bounds.vmargin) {
+        by = game_bounds.top_bound + game_bounds.vmargin;
+        bh = bullet.y - by;
+      } else if (bullet.y > gp) {
+        bh = gp - by;
+      }
+      if (by < gp) {
+        ctx.fillStyle = 'yellow';
+        ctx.fillRect(bullet.x, by, bullet_.width, bh);
+      }
     });
   };
 
@@ -58,6 +67,15 @@
   //================================================================================
 
   export const move = () => {
+    tau_step++;
+    if (tau_step > bullet_.tau) {
+      tau_step = 0;
+    } else {
+      return;
+    }
+    if (fire_cooldown) {
+      fire_cooldown--;
+    }
     // move bullets
     bullets = bullets.filter(bullet => bullet.y > game_bounds.top_bound + game_bounds.vmargin && !bullet.cleared);
     bullets.forEach(bullet => bullet.y -= bullet_.delta);

@@ -1,6 +1,5 @@
 <script>
-  import { game_store } from '../../shared/game_store.js';
-  import { hud_store, player_store, bullet_store } from '../../shared/store.js';
+  import { game_store, hud_store } from '../../shared/store.js';
   import { onDestroy, onMount } from 'svelte';
   import * as Hud from './Hud.svelte';
   import * as Player from './Player.svelte';
@@ -10,8 +9,6 @@
   let canvas;
   let game_bounds;
   let hud;
-  let player;
-  let bullet_;
 
   let left_key_down = false;
   let right_key_down = false;
@@ -25,25 +22,16 @@
     hud = value;
   });
 
-  const player_store_unsubscribe = player_store.subscribe(value => {
-    player = value;
-  });
-
-  const bullet_store_unsubscribe = bullet_store.subscribe(value => {
-    bullet_ = value;
-  });
-
   // gameplay attributes
   let started;
   let playing;
   let pausing;
-  let game_interval; // for game loop timer
+  let frame_interval; // for frame loop timer
+  let update_interval; // for update loop timer
 
   onDestroy(() => {
     game_store_unsubscribe();
     hud_store_unsubscribe();
-    player_store_unsubscribe();
-    bullet_store_unsubscribe();
     reset();
   });
 
@@ -159,9 +147,9 @@
     started = true;
     playing = true;
     pausing = false;
-    game_interval = setInterval(() => {
+    update_interval = setInterval(() => {
       if (!playing) {
-        clearInterval(interval);
+        clearInterval(update_interval);
       }
       if (left_key_down && right_key_down) {
         Player.go_left_right();
@@ -174,8 +162,13 @@
         Player.shoot();
       }
       update();
+    }, game_store.UPDATE_TIME_INTERVAL);
+    frame_interval = setInterval(() => {
+      if (!playing) {
+        clearInterval(frame_interval);
+      }
       draw();
-    }, game_store.TIME_INTERVAL);
+    }, game_store.FRAME_TIME_INTERVAL);
   };
 
   // start the game
@@ -189,7 +182,8 @@
   function pause() {
     playing = false;
     pausing = true;
-    clearInterval(game_interval)
+    clearInterval(update_interval)
+    clearInterval(frame_interval)
   }
 
   // reset the game (on game end or hot reload)
@@ -200,7 +194,8 @@
     pausing = false;
     Enemy.clear();
     Bullet.clear();
-    clearInterval(game_interval);
+    clearInterval(update_interval)
+    clearInterval(frame_interval);
   }
 
   // initialize game ui
@@ -222,3 +217,5 @@
 </style>
 
 <canvas bind:this={canvas} width="{game_store.CANVAS_WIDTH}" height="{game_store.CANVAS_HEIGHT}"></canvas>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Sixtyfour&display=swap" rel="stylesheet">
