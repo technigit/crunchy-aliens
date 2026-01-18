@@ -6,16 +6,24 @@
   import * as Bullet from './Bullet.svelte';
   import * as Enemy from './Enemy.svelte';
 
-  let canvas;
+  let game_canvas;
+  let game_ctx;
   let game_bounds;
   let hud;
+  let sprite_canvas;
+  let sprite_ctx;
 
   let left_key_down = false;
   let right_key_down = false;
   let fire_key_down = false;
 
-  const game_store_unsubscribe = game_store.bounds.subscribe(value => {
+  const game_store_bounds_unsubscribe = game_store.bounds.subscribe(value => {
     game_bounds = value;
+  });
+
+  const game_store_contexts_unsubscribe = game_store.contexts.subscribe(value => {
+    game_ctx = value.game_ctx;
+    sprite_ctx = value.sprite_ctx;
   });
 
   const hud_store_unsubscribe = hud_store.subscribe(value => {
@@ -30,7 +38,8 @@
   let update_interval; // for update loop timer
 
   onDestroy(() => {
-    game_store_unsubscribe();
+    game_store_bounds_unsubscribe();
+    game_store_contexts_unsubscribe();
     hud_store_unsubscribe();
     reset();
   });
@@ -97,40 +106,39 @@
   //================================================================================
 
   const draw = () => {
-    if (canvas == null) {
+    if (game_canvas == null) {
       return;
     }
 
-    // initialize canvas
-    const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // initialize game_canvas
+    game_ctx.clearRect(0, 0, game_canvas.width, game_canvas.height);
 
     // background
-    ctx.fillStyle = 'gray';
-    ctx.fillRect(0, game_bounds.top_bound, game_bounds.left_bound, canvas.height - game_bounds.top_bound - game_bounds.bottom_bound);
-    ctx.fillRect(game_bounds.right_bound, game_bounds.top_bound, canvas.width - game_bounds.right_bound, canvas.height - game_bounds.top_bound - game_bounds.bottom_bound);
+    game_ctx.fillStyle = 'gray';
+    game_ctx.fillRect(0, game_bounds.top_bound, game_bounds.left_bound, game_canvas.height - game_bounds.top_bound - game_bounds.bottom_bound);
+    game_ctx.fillRect(game_bounds.right_bound, game_bounds.top_bound, game_canvas.width - game_bounds.right_bound, game_canvas.height - game_bounds.top_bound - game_bounds.bottom_bound);
 
     // hmargin areas (temporary)
-    ctx.fillStyle = 'purple';
-    ctx.fillRect(game_bounds.left_bound, game_bounds.top_bound, game_bounds.right_bound - game_bounds.left_bound, game_bounds.hmargin);
-    ctx.fillRect(game_bounds.left_bound, canvas.height - game_bounds.top_bound - game_bounds.hmargin, game_bounds.right_bound - game_bounds.left_bound, game_bounds.hmargin);
+    game_ctx.fillStyle = 'purple';
+    game_ctx.fillRect(game_bounds.left_bound, game_bounds.top_bound, game_bounds.right_bound - game_bounds.left_bound, game_bounds.hmargin);
+    game_ctx.fillRect(game_bounds.left_bound, game_canvas.height - game_bounds.top_bound - game_bounds.hmargin, game_bounds.right_bound - game_bounds.left_bound, game_bounds.hmargin);
 
     // vmargin areas (temporary)
-    ctx.fillStyle = 'purple';
-    ctx.fillRect(game_bounds.left_bound, game_bounds.top_bound, game_bounds.vmargin, canvas.height - game_bounds.top_bound - game_bounds.bottom_bound);
-    ctx.fillRect(game_bounds.right_bound - game_bounds.vmargin, game_bounds.top_bound, game_bounds.vmargin, canvas.height - game_bounds.top_bound - game_bounds.bottom_bound);
+    game_ctx.fillStyle = 'purple';
+    game_ctx.fillRect(game_bounds.left_bound, game_bounds.top_bound, game_bounds.vmargin, game_canvas.height - game_bounds.top_bound - game_bounds.bottom_bound);
+    game_ctx.fillRect(game_bounds.right_bound - game_bounds.vmargin, game_bounds.top_bound, game_bounds.vmargin, game_canvas.height - game_bounds.top_bound - game_bounds.bottom_bound);
 
     // draw heads up display
-    Hud.draw(ctx);
+    Hud.draw();
 
     // draw player
-    Player.draw(ctx);
+    Player.draw();
 
     // draw bullets
-    Bullet.draw(ctx);
+    Bullet.draw();
 
     // draw enemies
-    Enemy.draw(ctx);
+    Enemy.draw();
   };
 
   //================================================================================
@@ -200,6 +208,9 @@
 
   // initialize game ui
   onMount(() => {
+    game_store.contexts.update(current => ({...current, game_ctx: game_canvas.getContext('2d')}));
+    game_store.contexts.update(current => ({...current, sprite_ctx: sprite_canvas.getContext('2d')}));
+    game_store.contexts.update(current => ({...current, sprite_canvas: sprite_canvas}));
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
     draw();
@@ -210,12 +221,17 @@
 </script>
 
 <style>
-  canvas {
+  canvas#game_canvas {
     background: black;
     margin-left: auto; margin-right: auto;
   }
+
+  canvas#sprite_canvas {
+    display: none;
+  }
 </style>
 
-<canvas bind:this={canvas} width="{game_store.CANVAS_WIDTH}" height="{game_store.CANVAS_HEIGHT}"></canvas>
+<canvas bind:this={game_canvas} width="{game_store.CANVAS_WIDTH}" height="{game_store.CANVAS_HEIGHT}" id="game_canvas"></canvas>
+<canvas bind:this={sprite_canvas} width="{game_store.CANVAS_WIDTH}" height="{game_store.CANVAS_HEIGHT}" id="sprite_canvas"></canvas>
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Sixtyfour&display=swap" rel="stylesheet">

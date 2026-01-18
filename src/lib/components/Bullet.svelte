@@ -3,6 +3,7 @@
   import * as Enemy from './Enemy.svelte';
   import { onDestroy } from 'svelte';
 
+  let game_ctx;
   let game_bounds;
   let player;
   let bullet_;
@@ -12,8 +13,12 @@
   let fire_cooldown = 0;
   let tau_step = 0;
 
-  const game_store_unsubscribe = game_store.bounds.subscribe(value => {
+  const game_store_bounds_unsubscribe = game_store.bounds.subscribe(value => {
     game_bounds = value;
+  });
+
+  const game_store_contexts_unsubscribe = game_store.contexts.subscribe(value => {
+    game_ctx = value.game_ctx;
   });
 
   const player_store_unsubscribe = player_store.subscribe(value => {
@@ -43,7 +48,7 @@
   // draw bullets
   //================================================================================
 
-  export const draw = (ctx) => {
+  export const draw = () => {
     let by, bh;
     let gp = player.y - player.gunpoint_y;
     bullets.forEach(bullet => {
@@ -56,8 +61,8 @@
         bh = gp - by;
       }
       if (by < gp) {
-        ctx.fillStyle = 'yellow';
-        ctx.fillRect(bullet.x, by, bullet_.width, bh);
+        game_ctx.fillStyle = 'yellow';
+        game_ctx.fillRect(bullet.x, by, bullet_.width, bh);
       }
     });
   };
@@ -67,10 +72,8 @@
   //================================================================================
 
   export const move = () => {
-    tau_step++;
-    if (tau_step > bullet_.tau) {
-      tau_step = 0;
-    } else {
+    tau_step = (tau_step + 1) % (bullet_.tau + 1);
+    if (tau_step) {
       return;
     }
     if (fire_cooldown) {
@@ -103,7 +106,8 @@
 
 <script>
   onDestroy(() => {
-    game_store_unsubscribe();
+    game_store_bounds_unsubscribe();
+    game_store_contexts_unsubscribe();
     player_store_unsubscribe();
     bullet_store_unsubscribe();
   });

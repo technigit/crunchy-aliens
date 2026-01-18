@@ -1,16 +1,27 @@
 <script module>
   import { game_store, player_store } from '../../shared/store.js';
-  import { onDestroy } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
   import * as Bullet from './Bullet.svelte';
 
+  let game_ctx;
+  let sprite_ctx;
+  let sprite_canvas;
+  let sprite_frame_x = 0;
+  let sprite_frame_y = 0;
   let game_bounds;
   let player;
 
   let move_cooldown = 0;
   let tau_step = 0;
 
-  const game_store_unsubscribe = game_store.bounds.subscribe(value => {
+  const game_store_bounds_unsubscribe = game_store.bounds.subscribe(value => {
     game_bounds = value;
+  });
+
+  const game_store_contexts_unsubscribe = game_store.contexts.subscribe(value => {
+    game_ctx = value.game_ctx;
+    sprite_ctx = value.sprite_ctx;
+    sprite_canvas = value.sprite_canvas;
   });
 
   const player_store_unsubscribe = player_store.subscribe(value => {
@@ -33,21 +44,33 @@
         y: game_store.CANVAS_HEIGHT - player_y }
       ));
     }
+    draw_sprites();
   };
 
   //================================================================================
   // draw player
   //================================================================================
 
-  export const draw = (ctx) => {
+  export const draw = () => {
     if (player) {
-      draw_player(ctx);
+      draw_player();
     }
   }
 
-  export const draw_player = (ctx, x = player.x, y = player.y, width = player.width, height = player.height) => {
-    ctx.fillStyle = 'white';
-    ctx.fillRect(x, y, width, height);
+  export const draw_player = (x = player.x, y = player.y, width = player.width, height = player.height) => {
+    game_ctx.drawImage(sprite_canvas, sprite_frame_x, sprite_frame_y, player.width, player.height, x, y, player.width, player.height);
+  }
+
+  const draw_sprites = () => {
+    let x = sprite_frame_x;
+    let y = sprite_frame_y;
+    sprite_ctx.fillStyle = 'orange';
+    sprite_ctx.fillRect(x + 20, y, 10, 5); // Cockpit
+    sprite_ctx.fillStyle = 'white';
+    sprite_ctx.fillRect(x, y + 5, 50, 10); // Ship body
+    sprite_ctx.fillStyle = 'gray';
+    sprite_ctx.fillRect(x + 10, y + 15, 10, 5); // Engine 1
+    sprite_ctx.fillRect(x + 30, y + 15, 10, 5); // Engine 2
   }
 
   //================================================================================
@@ -55,16 +78,14 @@
   //================================================================================
 
   export const move = () => {
-    tau_step++;
-    if (tau_step > player.tau) {
-      tau_step = 0;
-    } else {
+    tau_step = (tau_step + 1) % (player.tau + 1);
+    if (tau_step) {
       return;
     }
-    if (move_cooldown) {
-      move_cooldown > 0 ? move_cooldown-- : move_cooldown;
+    if (move_cooldown > 0) {
+      move_cooldown--;
     } else {
-      return;
+      return
     }
     if (player) {
       if (player_moving == game_store.LEFT && player.x - player.delta >= game_bounds.left_bound + game_bounds.vmargin) {
@@ -116,7 +137,8 @@
 
 <script>
   onDestroy(() => {
-    game_store_unsubscribe();
+    game_store_bounds_unsubscribe();
+    game_store_contexts_unsubscribe();
     player_store_unsubscribe();
   });
 </script>

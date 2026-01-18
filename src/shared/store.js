@@ -42,6 +42,12 @@ export const game_store = {
         hmargin: INITIAL_HMARGIN,
         vmargin: INITIAL_VMARGIN,
     }),
+
+    contexts: writable({
+        game_ctx: null,
+        sprite_ctx: null,
+        sprite_canvas: null,
+    })
 };
 
 //================================================================================
@@ -132,7 +138,7 @@ export const player_store = writable({
 // enemy formation configuration
 const INITIAL_NUM_ENEMIES = 30;
 const INITIAL_ENEMY_COLUMN_WIDTH = 60;
-const INITIAL_ENEMY_ROW_HEIGHT = 70;
+const INITIAL_ENEMY_ROW_HEIGHT = 30;
 const INITIAL_MAX_ENEMY_COLUMNS = 5;
 
 // move enemies this many pixels
@@ -143,7 +149,7 @@ const INITIAL_ENEMY_TAU = 2;
 
 // enemy dimensions
 const INITIAL_ENEMY_WIDTH = 50;
-const INITIAL_ENEMY_HEIGHT = 50;
+const INITIAL_ENEMY_HEIGHT = 20;
 
 export const enemy_store = writable({
     num_enemies: INITIAL_NUM_ENEMIES,
