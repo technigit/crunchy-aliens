@@ -1,14 +1,27 @@
 <script module>
-  import { game_store, hud_store } from '../../shared/store.js';
+  import { game_store, hud_store } from '@shared/store.js';
   import { onDestroy } from 'svelte';
   import * as Player from './Player.svelte';
 
+  // game handling
   let game_ctx;
-  let sprite_ctx;
-  let sprite_canvas;
   let game_bounds;
+
+  // sprite handling
+  let sprite_canvas;
+  let sprite_ctx;
+
+  // components
   let hud;
+
+  // hud handling
   let hiscore = 0;
+  let banner_top_y = 40;
+  let banner_bottom_y = game_store.CANVAS_HEIGHT - 10;
+
+  //================================================================================
+  // stores
+  //================================================================================
 
   const game_store_bounds_unsubscribe = game_store.bounds.subscribe(value => {
     game_bounds = value;
@@ -23,9 +36,6 @@
   const hud_store_unsubscribe = hud_store.subscribe(value => {
     hud = value;
   });
-
-  let banner_top_y = 40;
-  let banner_bottom_y = game_store.CANVAS_HEIGHT - 10;
 
   //================================================================================
   // draw score

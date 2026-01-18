@@ -1,17 +1,25 @@
 <script module>
-  import { game_store, player_store, bullet_store, enemy_store } from '../../shared/store.js';
+  import { game_store, player_store, bullet_store, enemy_store } from '@shared/store.js';
   import * as Enemy from './Enemy.svelte';
   import { onDestroy } from 'svelte';
 
+  // game handling
   let game_ctx;
   let game_bounds;
+
+  // components
   let player;
   let bullet_;
   let bullets = [];
   let enemy_;
 
+  // bullet handling
   let fire_cooldown = 0;
   let tau_step = 0;
+
+  //================================================================================
+  // stores
+  //================================================================================
 
   const game_store_bounds_unsubscribe = game_store.bounds.subscribe(value => {
     game_bounds = value;

@@ -1,22 +1,33 @@
 <script module>
-  import { game_store, hud_store, enemy_store } from '../../shared/store.js';
-  import { onMount, onDestroy } from 'svelte';
+  import { game_store, hud_store, enemy_store } from '@shared/store.js';
+  import { onDestroy } from 'svelte';
 
+  // game handling
   let game_ctx;
-  let sprite_ctx;
-  let sprite_canvas;
   let game_bounds;
-  let hud;
-  let bullet_;
-  let enemy_;
-  let enemy_moving = game_store.RIGHT;
-  let tau_step = 0;
+
+  // sprite handling
+  let sprite_canvas;
+  let sprite_ctx;
   let sprite_frames_x = [50, 100, 150];
   let sprite_frames_y = 0;
   let sprite_tau = 5;
   let sprite_step = 0;
   let sprite_rotation = 0;
   let sprite_rotation_max = 3;
+
+  // components
+  let hud;
+  let bullet_;
+  let enemy_;
+  let enemy_moving = game_store.RIGHT;
+
+  // enemy handling
+  let tau_step = 0;
+
+  //================================================================================
+  // stores
+  //================================================================================
 
   const game_store_bounds_unsubscribe = game_store.bounds.subscribe(value => {
     game_bounds = value;
@@ -185,9 +196,6 @@
 </script>
 
 <script>
-  onMount(() => {
-  });
-
   onDestroy(() => {
     game_store_bounds_unsubscribe();
     game_store_contexts_unsubscribe();

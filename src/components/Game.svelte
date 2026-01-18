@@ -1,21 +1,38 @@
 <script>
-  import { game_store, hud_store } from '../../shared/store.js';
+  import { game_store, hud_store } from '@shared/store.js';
   import { onDestroy, onMount } from 'svelte';
   import * as Hud from './Hud.svelte';
   import * as Player from './Player.svelte';
   import * as Bullet from './Bullet.svelte';
   import * as Enemy from './Enemy.svelte';
 
+  // game handling
   let game_canvas;
   let game_ctx;
   let game_bounds;
-  let hud;
+
+  // sprite handling
   let sprite_canvas;
   let sprite_ctx;
 
+  // components
+  let hud;
+
+  // keyboard handling
   let left_key_down = false;
   let right_key_down = false;
   let fire_key_down = false;
+
+  // gameplay attributes
+  let started;
+  let playing;
+  let pausing;
+  let frame_interval; // for frame loop timer
+  let update_interval; // for update loop timer
+
+  //================================================================================
+  // stores
+  //================================================================================
 
   const game_store_bounds_unsubscribe = game_store.bounds.subscribe(value => {
     game_bounds = value;
@@ -29,13 +46,6 @@
   const hud_store_unsubscribe = hud_store.subscribe(value => {
     hud = value;
   });
-
-  // gameplay attributes
-  let started;
-  let playing;
-  let pausing;
-  let frame_interval; // for frame loop timer
-  let update_interval; // for update loop timer
 
   onDestroy(() => {
     game_store_bounds_unsubscribe();

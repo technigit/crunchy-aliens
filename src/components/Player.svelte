@@ -1,18 +1,29 @@
 <script module>
-  import { game_store, player_store } from '../../shared/store.js';
+  import { game_store, player_store } from '@shared/store.js';
   import { onMount, onDestroy } from 'svelte';
   import * as Bullet from './Bullet.svelte';
 
+  // game handling
   let game_ctx;
-  let sprite_ctx;
+  let game_bounds;
+
+  // sprite handling
   let sprite_canvas;
+  let sprite_ctx;
   let sprite_frame_x = 0;
   let sprite_frame_y = 0;
-  let game_bounds;
+
+  // components
   let player;
 
+  // player handling
   let move_cooldown = 0;
+  let player_moving = game_store.STOP;
   let tau_step = 0;
+
+  //================================================================================
+  // stores
+  //================================================================================
 
   const game_store_bounds_unsubscribe = game_store.bounds.subscribe(value => {
     game_bounds = value;
@@ -27,8 +38,6 @@
   const player_store_unsubscribe = player_store.subscribe(value => {
     player = value;
   });
-
-  let player_moving = game_store.STOP;
 
   //================================================================================
   // initialize player
